@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     ALIYUN_OSS_BUCKET: str = ""
 
     # Google Gemini配置 (替代OCR功能)
-    GOOGLE_API_KEY: str = "AIzaSyCmwOrFUUZB_PSzxghpjJFrX5nhrHL82P0"
+    GOOGLE_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.0-flash"
 
     # JWT配置
