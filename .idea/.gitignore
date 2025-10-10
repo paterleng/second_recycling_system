@@ -1,3 +1,7 @@
 # 默认忽略的文件
 /shelf/
 /workspace.xml
+
+# 敏感配置和本地环境文件
+.env
+settings.py
