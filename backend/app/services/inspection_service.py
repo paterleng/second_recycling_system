@@ -23,6 +23,8 @@ class InspectionService:
         storage: str,
         accessory_condition: str,
         about_machine_image: UploadFile,
+        machine_type_image: UploadFile,
+        product_date_image: UploadFile,
         battery_health_image: UploadFile,
         appearance_images: List[UploadFile],
         screen_image: UploadFile,
@@ -41,13 +43,14 @@ class InspectionService:
             任务ID
         """
         # 生成任务ID
-        print("进来了")
         task_id = uuid.uuid4()
         task_folder = f"inspections/{task_id}"
 
         try:
             # 保存文件
             about_machine_path = await file_storage.save_file(about_machine_image, task_folder)
+            machine_type_path = await file_storage.save_file(machine_type_image, task_folder)
+            product_date_path = await file_storage.save_file(product_date_image, task_folder)
             battery_health_path = await file_storage.save_file(battery_health_image, task_folder)
             screen_path = await file_storage.save_file(screen_image, task_folder)
             flashlight_path = await file_storage.save_file(flashlight_image, task_folder)
@@ -65,6 +68,8 @@ class InspectionService:
                 },
                 "uploaded_files": {
                     "about_machine_image": about_machine_path,
+                    "machine_type_image": machine_type_path,
+                    "product_date_image": product_date_path,
                     "battery_health_image": battery_health_path,
                     "appearance_images": appearance_paths,
                     "screen_image": screen_path,

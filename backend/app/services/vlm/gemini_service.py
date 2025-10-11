@@ -51,7 +51,7 @@ class GeminiVLMService:
         try:
             # 构建提示词
             prompt = """
-            请仔细分析这些手机外观照片，重点检查以下方面：
+            请仔细分析这些手机外观照片，使用中文回答，重点检查以下方面：
 
             1. 机身外壳状况：
                - 是否有划痕、磕碰、凹陷
@@ -138,7 +138,7 @@ class GeminiVLMService:
         """
         try:
             prompt = """
-            请极其仔细地分析这张手机屏幕照片，用放大镜级别的细致程度检查所有可能的问题：
+            请极其仔细地分析这张手机屏幕照片，用放大镜级别的细致程度检查所有可能的问题，使用中文回答：
 
             1. 屏幕物理损伤（重点检查）：
                - 任何裂痕、裂缝（包括发丝般细微的裂纹）
@@ -214,7 +214,7 @@ class GeminiVLMService:
         """
         try:
             prompt = """
-            请仔细检查这些摄像头镜片的照片，重点分析：
+            请仔细检查这些摄像头镜片的照片，使用中文回答，重点分析：
 
             1. 镜片清洁度：
                - 是否有灰尘、污渍
@@ -285,7 +285,7 @@ class GeminiVLMService:
         """
         try:
             prompt = """
-            请分析这张闪光灯点亮的照片：
+            请分析这张闪光灯点亮的照片，使用中文回答：
 
             1. 功能性：
                - 闪光灯是否正常点亮
@@ -348,7 +348,7 @@ class GeminiVLMService:
         """
         try:
             prompt = """
-            请仔细识别并提取这张图片中的所有文字内容。
+            请仔细识别并提取这张图片中的所有文字内容，使用中文回答。
 
             要求：
             1. 保持原始的文字布局和层次
@@ -450,6 +450,137 @@ class GeminiVLMService:
                 "error": f"设备信息提取失败: {str(e)}"
             }
 
+    async def machine_type_info(self, image_path: str) -> Dict[str, Any]:
+            """
+            从手机"关于本机"截图中提取设备信息 (替代OCR功能)
+
+            Args:
+                image_path: 关于本机截图路径
+
+            Returns:
+                提取的设备信息
+            """
+            try:
+                prompt = """
+                请分析这张手机"关于本机"或"设备信息"的截图，使用中文回答，提取以下关键信息：
+
+                1. 设备型号和品牌
+                2. 系统版本
+                3. 存储容量信息
+
+                请以JSON格式返回：
+                {
+                    "device_brand": "设备品牌",
+                    "device_model": "具体型号",
+                    "system_version": "系统版本",
+                    "storage_info": "存储容量",
+                    "other_info": "其他重要信息"
+                }
+                """
+
+                image_data = self._load_image(image_path)
+                response = self.model.generate_content([prompt, image_data])
+
+                result_text = response.text.strip()
+
+                # 尝试提取JSON部分
+                if "```json" in result_text:
+                    json_start = result_text.find("```json") + 7
+                    json_end = result_text.find("```", json_start)
+                    result_text = result_text[json_start:json_end].strip()
+                elif "{" in result_text and "}" in result_text:
+                    json_start = result_text.find("{")
+                    json_end = result_text.rfind("}") + 1
+                    result_text = result_text[json_start:json_end]
+
+                try:
+                    device_info = json.loads(result_text)
+                except json.JSONDecodeError:
+                    # 如果JSON解析失败，从原始文本中提取信息
+                    device_info = {
+                        "device_brand": "未知",
+                        "device_model": "未知",
+                        "system_version": "未知",
+                        "storage_info": "未知",
+                        "other_info": "AI解析异常",
+                        "raw_response": result_text
+                    }
+
+                return {
+                    "success": True,
+                    "device_info": device_info,
+                    "source": "Gemini_VLM"
+                }
+
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"设备信息提取失败: {str(e)}"
+                }
+
+    async def product_date_info(self, image_path: str) -> Dict[str, Any]:
+            """
+           提取第一次使用时间图片
+
+            Args:
+                image_path: 关于本机截图路径
+
+            Returns:
+                提取的设备信息
+            """
+            try:
+                prompt = """
+                请分析这张手机"关于本机"或"设备信息"的截图，使用中文回答，提取以下关键信息：
+
+                1. 生产日期
+                2. 首次使用日期
+
+                请以JSON格式返回：
+                {
+                    "product_date": "生产日期",
+                    "first_use_date": "首次使用日期",
+                    "other_info": "其他重要信息"
+                }
+                """
+
+                image_data = self._load_image(image_path)
+                response = self.model.generate_content([prompt, image_data])
+
+                result_text = response.text.strip()
+
+                # 尝试提取JSON部分
+                if "```json" in result_text:
+                    json_start = result_text.find("```json") + 7
+                    json_end = result_text.find("```", json_start)
+                    result_text = result_text[json_start:json_end].strip()
+                elif "{" in result_text and "}" in result_text:
+                    json_start = result_text.find("{")
+                    json_end = result_text.rfind("}") + 1
+                    result_text = result_text[json_start:json_end]
+
+                try:
+                    device_info = json.loads(result_text)
+                except json.JSONDecodeError:
+                    # 如果JSON解析失败，从原始文本中提取信息
+                    device_info = {
+                        "product_date": "未知",
+                        "first_use_date": "未知",
+                        "other_info": "AI解析异常",
+                        "raw_response": result_text
+                    }
+
+                return {
+                    "success": True,
+                    "device_info": device_info,
+                    "source": "Gemini_VLM"
+                }
+
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"设备信息提取失败: {str(e)}"
+                }
+
     async def extract_battery_info(self, image_path: str) -> Dict[str, Any]:
         """
         从"电池健康"截图中提取电池信息 (替代OCR功能)
@@ -462,7 +593,7 @@ class GeminiVLMService:
         """
         try:
             prompt = """
-            请分析这张电池健康或电池信息的截图，提取以下信息：
+            请分析这张电池健康或电池信息的截图，使用中文回答，提取以下信息：
 
             1. 电池最大容量百分比
             2. 电池健康状态
@@ -513,6 +644,56 @@ class GeminiVLMService:
                 "success": False,
                 "error": f"电池信息提取失败: {str(e)}"
             }
+
+    async def final_report(self, content: str) -> Dict[str, Any]:
+        try:
+            prompt = """
+            **请扮演一位专业的二手设备回收估价师。**
+
+            **任务目标：**
+            根据以下提供的质检信息，进行详细评估，并给出最终的回收估价。即使报告中的某些信息缺失或不完整，也请基于已有数据做出最合理的判断。
+            
+            **评估要求：**
+            1.  **确定价格区间：** 给出该设备**合理的回收价格区间（人民币）**。
+            2.  **核心依据：** 必须优先考虑**主要缺陷**，这是最大的价格扣减项。
+            3.  **最终总结：** 以专业、简洁的语言生成最终的估价报告。
+            请以JSON格式返回：
+            {
+                "price": "价格区间",
+                "other_info": "其他重要信息"
+            }
+            """
+
+            response = self.model.generate_content([prompt, content])
+
+            result_text = response.text.strip()
+
+            if "```json" in result_text:
+                json_start = result_text.find("```json") + 7
+                json_end = result_text.find("```", json_start)
+                result_text = result_text[json_start:json_end].strip()
+
+            try:
+                analysis_result = json.loads(result_text)
+            except json.JSONDecodeError:
+                analysis_result = {
+                    "price": "需要人工解析",
+                    "other_info":"解析异常",
+                    "raw_response": result_text
+                }
+
+            return {
+                "success": True,
+                "result_text": analysis_result
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"最终报告生成失败: {str(e)}"
+            }
+
+
 
 
 # 全局实例

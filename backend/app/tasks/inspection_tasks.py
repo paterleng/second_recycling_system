@@ -42,6 +42,7 @@ def process_inspection_task(self, task_id_str: str):
         user_inputs = inspection.user_inputs
         uploaded_files = user_inputs["uploaded_files"]
         basic_info = user_inputs["basic_info"]
+        user_inputs_text = user_inputs["user_text_inputs"]
 
         # 构建文件完整路径 - 使用相对于backend目录的路径
         upload_base = Path('../uploads')
@@ -57,6 +58,22 @@ def process_inspection_task(self, task_id_str: str):
             gemini_vlm.extract_device_info(str(about_machine_path))
         )
         print("本机信息结果",device_info_result)
+
+        # 使用Gemini提取手机类型信息
+        machine_type_path = upload_base / uploaded_files["machine_type_image"]
+        print(machine_type_path)
+        machine_type_result = asyncio.run(
+            gemini_vlm.machine_type_info(str(machine_type_path))
+        )
+        print("类型结果", machine_type_result)
+
+        # 提取生产时间信息
+        product_date_path = upload_base / uploaded_files["product_date_image"]
+        print(product_date_path)
+        product_date_result = asyncio.run(
+            gemini_vlm.product_date_info(str(product_date_path))
+        )
+        print("生产时间结果", product_date_result)
 
         # 使用Gemini提取"电池健康"信息
         battery_health_path = upload_base / uploaded_files["battery_health_image"]
@@ -105,31 +122,53 @@ def process_inspection_task(self, task_id_str: str):
 
         analysis_results = {
             "device_info": device_info_result,
+            "machine_type": machine_type_result,
+            "product_date": product_date_result,
             "battery_info": battery_info_result,
             "appearance": appearance_result,
             "screen": screen_result,
             "camera": camera_result,
-            "flashlight": flashlight_result
+            "flashlight": flashlight_result,
+            "basic_info" :basic_info,
+            "user_inputs_text": user_inputs_text,
         }
         print("综合结果",analysis_results)
 
-        # 4. 估价计算
-        current_task.update_state(state='PROGRESS', meta={'step': '计算估价', 'progress': 85})
+        # 提取结果，组合成字符串总结
+        descriptive_report_string = extract_and_format_report(analysis_results)
 
-        valuation_result = valuation_service.calculate_price(
-            brand=basic_info["brand"],
-            model=basic_info["model"],
-            storage=basic_info["storage"],
-            analysis_results=analysis_results
+        print(descriptive_report_string)
+        re_results = asyncio.run(
+            gemini_vlm.final_report(descriptive_report_string)
         )
+        print("价格预测", re_results)
 
-        # 5. 生成最终报告
-        current_task.update_state(state='PROGRESS', meta={'step': '生成最终报告', 'progress': 95})
+        # 组合到一起返回
+        final_report = extract_information(analysis_results)
+        print("价格",re_results.get("result_text",{}).get("price","需要人工定价"))
+        # 加上价格存储到数据库中
 
-        final_report = _generate_final_report(
-            basic_info, analysis_results, valuation_result
-        )
-        print("最终报告",final_report)
+        final_report["user_input"] = basic_info
+        final_report["user_inputs_text"] = user_inputs_text
+        print("最终结果",final_report)
+
+        # # 4. 估价计算
+        # current_task.update_state(state='PROGRESS', meta={'step': '计算估价', 'progress': 85})
+        #
+        # valuation_result = valuation_service.calculate_price(
+        #     brand=basic_info["brand"],
+        #     model=basic_info["model"],
+        #     storage=basic_info["storage"],
+        #     analysis_results=analysis_results
+        # )
+
+        # # 5. 生成最终报告
+        # current_task.update_state(state='PROGRESS', meta={'step': '生成最终报告', 'progress': 95})
+        #
+        # final_report = _generate_final_report(
+        #     basic_info, analysis_results, valuation_result
+        # )
+        # print("最终报告",final_report)
 
         # 6. 保存结果
         inspection_service.save_inspection_result(task_id, final_report)
@@ -266,3 +305,166 @@ def _generate_final_report(
         "summary": summary,
         "detailed_tags": detailed_tags
     }
+
+
+def extract_information(data: dict) -> dict:
+    # 由于存在 'device_info' 和 'machine_type' 两个信息源，以更准确的 'machine_type' 为准
+    machine_type_data = data.get('machine_type', {}).get('device_info', {})
+
+    brand = machine_type_data.get('device_brand', '未知')
+    model = machine_type_data.get('device_model', '未知')
+    storage_total = machine_type_data.get('storage_info', '未知容量').split(',')[0].replace('总容量 ', '')
+    storage_use = machine_type_data.get('storage_info', '未知容量').split(',')[0].replace('可用容量', '')
+
+    # --- 2. 电池信息 ---
+    battery_data = data.get('battery_info', {}).get('battery_info', {})
+
+    # --- 3. 外观检查 ---
+    appearance_analysis = data.get('appearance', {}).get('analysis', {})
+    appearance = []
+    detailed_app_analysis = appearance_analysis.get('detailed_analysis', {})
+    appearance.append(f"- **正面分析:** {detailed_app_analysis.get('front', '无记录')}")
+    appearance.append(f"- **背面分析:** {detailed_app_analysis.get('back', '无记录')}")
+    appearance.append(f"- **侧边分析:** {detailed_app_analysis.get('edges', '无记录')}")
+    # --- 4. 屏幕检查 ---
+    screen_analysis = data.get('screen', {}).get('analysis', {})
+    screen_result = []
+    issues = screen_analysis.get('issues', [])
+    if issues:
+        screen_result.append(f"- **主要问题:**")
+        for issue in issues:
+            screen_result.append(f"    - {issue}")
+    else:
+        screen_result.append(f"- **主要问题:** 无")
+
+    screen_result.append(f"- **显示质量:** {screen_analysis.get('display_quality', '未知')}")
+    # --- 5. 摄像头检查 ---
+    camera_analysis = data.get('camera', {}).get('analysis', {})
+    # --- 6. 闪光灯检查 ---
+    flashlight_analysis = data.get('flashlight', {}).get('analysis', {})
+
+
+    # ---6. 时间 ---
+    product_date_data = data.get('product_date', {}).get('device_info', {})
+
+    product_date = product_date_data.get('product_date', 'N/A')
+    first_use_date = product_date_data.get('first_use_date', 'N/A')
+
+    device_info = data.get("device_info", {}).get("device_info", {})
+
+    result = {
+        # 品牌型号
+        "brand": brand + model,
+        # 存储容量
+        "storage_total": storage_total,
+        # 可用容量
+        "storage_use": storage_use,
+        # 生产日期
+        "product_date": product_date,
+        # 第一次使用时间日期
+        "first_use_date": first_use_date,
+        # 电池健康百分比
+        "maximum_capacity": battery_data.get('maximum_capacity', '未知'),
+        # 电池状态
+        "battery_health": battery_data.get('battery_health', '未知'),
+        # 充放电次数
+        "charge_cycles": battery_data.get('charge_cycles', '未知'),
+        # 机身整体成色
+        "overall_condition": appearance_analysis.get('overall_condition', '未知'),
+        # 外观的分析结果
+        "appearance_result": appearance,
+        # 屏幕成色
+        "screen_condition": screen_analysis.get('screen_condition', '未知'),
+        # 屏幕分析结果
+        "screen_result": screen_result,
+        # 镜头状态
+        "camera_lens": camera_analysis.get('lens_condition', '未知'),
+        # 是否有物理损坏
+        "physical_damage": camera_analysis.get('physical_damage', '未知'),
+        "flashlight_line": flashlight_analysis.get('functionality', '未知'),
+        "other_info": device_info.get("other_info", '无')
+    }
+    return result
+
+def extract_and_format_report(data: dict) -> str:
+    """
+    将 VLM 提取的嵌套字典转换为易于模型分析的描述性字符串。
+    """
+    report_lines = ["# 质检结果综合报告", ""]
+
+    # --- 1. 基础信息提取 ---
+    # 由于存在 'device_info' 和 'machine_type' 两个信息源，以更准确的 'machine_type' 为准
+    machine_type_data = data.get('machine_type', {}).get('device_info', {})
+
+    brand = machine_type_data.get('device_brand', '未知')
+    model = machine_type_data.get('device_model', '未知')
+    storage = machine_type_data.get('storage_info', '未知容量').split(',')[0].replace('总容量 ', '')
+
+    report_lines.append(f"## 基础设备信息")
+    report_lines.append(f"- **品牌/型号:** {brand} {model}")
+    report_lines.append(f"- **存储容量:** {storage}")
+
+    # --- 2. 电池信息 ---
+    battery_data = data.get('battery_info', {}).get('battery_info', {})
+    report_lines.append(f"\n## 电池健康状况")
+    report_lines.append(f"- **最大容量:** {battery_data.get('maximum_capacity', 'N/A')}")
+    report_lines.append(f"- **循环次数:** {battery_data.get('charge_cycles', 'N/A')}")
+    report_lines.append(f"- **性能状态:** {battery_data.get('battery_health', 'N/A')}")
+    report_lines.append(f"- **建议/备注:** {battery_data.get('recommendations', '无')}")
+
+    # --- 3. 外观检查 ---
+    appearance_analysis = data.get('appearance', {}).get('analysis', {})
+    report_lines.append(f"\n## 外观/机身检查 (Appearance)")
+    report_lines.append(f"- **整体成色:** {appearance_analysis.get('overall_condition', '未知')}")
+
+    detailed_app_analysis = appearance_analysis.get('detailed_analysis', {})
+    report_lines.append(f"- **正面分析:** {detailed_app_analysis.get('front', '无记录')}")
+    report_lines.append(f"- **背面分析:** {detailed_app_analysis.get('back', '无记录')}")
+    report_lines.append(f"- **侧边分析:** {detailed_app_analysis.get('edges', '无记录')}")
+
+    # --- 4. 屏幕检查 ---
+    screen_analysis = data.get('screen', {}).get('analysis', {})
+    report_lines.append(f"\n## 屏幕状况检查 (Screen)")
+    report_lines.append(f"- **屏幕评分:** {screen_analysis.get('screen_condition', '未知')}")
+
+
+    issues = screen_analysis.get('issues', [])
+    if issues:
+        report_lines.append(f"- **主要问题:**")
+        for issue in issues:
+            report_lines.append(f"    - {issue}")
+    else:
+        report_lines.append(f"- **主要问题:** 无")
+
+    report_lines.append(f"- **显示质量:** {screen_analysis.get('display_quality', '未知')}")
+
+    # --- 5. 摄像头检查 ---
+    camera_analysis = data.get('camera', {}).get('analysis', {})
+    report_lines.append(f"\n## 摄像头检查 (Camera)")
+    report_lines.append(f"- **镜头状态:** {camera_analysis.get('lens_condition', '未知')}")
+    report_lines.append(f"- **清洁度:** {camera_analysis.get('cleanliness', '未知')}")
+    report_lines.append(f"- **物理损坏:** {camera_analysis.get('physical_damage', '未知')}")
+
+    # --- 6. 闪光灯检查 ---
+    flashlight_analysis = data.get('flashlight', {}).get('analysis', {})
+    report_lines.append(f"\n## 闪光灯检查 (Flashlight)")
+    report_lines.append(f"- **功能性评估:** {flashlight_analysis.get('functionality', '无法评估')}")
+    report_lines.append(f"- **问题记录:** {', '.join(flashlight_analysis.get('issues', ['无']))}")
+
+    # ---6. 时间 ---
+    product_date_data = data.get('product_date', {}).get('device_info', {})
+
+    product_date = product_date_data.get('product_date', 'N/A')
+    first_use_date = product_date_data.get('first_use_date', 'N/A')
+
+    report_lines.append(f"\n## 使用历史 (Usage)")
+    report_lines.append(f"- **出厂日期:** {product_date}")
+    report_lines.append(f"- **首次激活/使用日期:** {first_use_date}")
+
+    # 7. 用户描述
+    report_lines.append(f"\n## 用户描述")
+    report_lines.append(f"- **用户文本描述:** {data.get('user_inputs_text')}")
+
+    return "\n".join(report_lines)
+
+
