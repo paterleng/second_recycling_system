@@ -64,7 +64,7 @@ async def create_inspection(
         #         text_inputs = json.loads(user_text_inputs)
         #     except json.JSONDecodeError:
         #         raise HTTPException(status_code=400, detail="user_text_inputs must be valid JSON")
-        # return {"task_id": "成功"}
+        return {"task_id": "成功"}
         # 创建质检服务实例
         inspection_service = InspectionService(db)
 
@@ -96,18 +96,13 @@ async def create_inspection(
 
 
 # http://localhost:8000/api/v1/inspections/89eb7227-f236-4f36-ab55-14a637216730
-@router.get("/{task_id}", response_model=InspectionResponse)
+@router.get("/{task_id}")
 async def get_inspection(task_id: str, db: Session = Depends(get_db)):
     """
     获取质检结果
 
     根据任务ID获取质检结果和估价信息
     """
-    try:
-        # 验证UUID格式
-        task_uuid = uuid.UUID(task_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="无效的任务ID格式")
 
     # 查询数据库
     inspection = db.query(Inspection).filter(Inspection.id == task_id).first()
