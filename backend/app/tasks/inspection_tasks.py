@@ -52,18 +52,21 @@ def process_inspection_task(self, task_id_str: str):
 
 
         # 使用Gemini提取"关于本机"信息
-        about_machine_path = upload_base / uploaded_files["about_machine_image"]
-        print(about_machine_path)
-        device_info_result = asyncio.run(
-            gemini_vlm.extract_device_info(str(about_machine_path))
-        )
-        print("本机信息结果",device_info_result)
+        # about_machine_path = upload_base / uploaded_files["about_machine_image"]
+        # print(about_machine_path)
+        # device_info_result = asyncio.run(
+        #     gemini_vlm.extract_device_info(str(about_machine_path))
+        # )
+        # print("本机信息结果",device_info_result)
 
         # 使用Gemini提取手机类型信息
-        machine_type_path = upload_base / uploaded_files["machine_type_image"]
-        print(machine_type_path)
+        # machine_type_path = upload_base / uploaded_files["machine_type_image"]
+        machine_type_paths = [
+            str(upload_base / path) for path in uploaded_files["machine_type_image"]
+        ]
+        print(machine_type_paths)
         machine_type_result = asyncio.run(
-            gemini_vlm.machine_type_info(str(machine_type_path))
+            gemini_vlm.machine_type_info(machine_type_paths)
         )
         print("类型结果", machine_type_result)
 
@@ -121,7 +124,7 @@ def process_inspection_task(self, task_id_str: str):
         current_task.update_state(state='PROGRESS', meta={'step': '生成质检报告', 'progress': 70})
 
         analysis_results = {
-            "device_info": device_info_result,
+            # "device_info": device_info_result,
             "machine_type": machine_type_result,
             "product_date": product_date_result,
             "battery_info": battery_info_result,
@@ -315,6 +318,7 @@ def extract_information(data: dict) -> dict:
     model = machine_type_data.get('device_model', '未知')
     storage_total = machine_type_data.get('storage_info', '未知容量').split(',')[0].replace('总容量 ', '')
     storage_use = machine_type_data.get('storage_info', '未知容量').split(',')[0].replace('可用容量', '')
+    other_info = machine_type_data.get('other_info', '未知')
 
     # --- 2. 电池信息 ---
     battery_data = data.get('battery_info', {}).get('battery_info', {})
@@ -350,8 +354,6 @@ def extract_information(data: dict) -> dict:
     product_date = product_date_data.get('product_date', 'N/A')
     first_use_date = product_date_data.get('first_use_date', 'N/A')
 
-    device_info = data.get("device_info", {}).get("device_info", {})
-
     result = {
         # 品牌型号
         "brand": brand + model,
@@ -382,7 +384,7 @@ def extract_information(data: dict) -> dict:
         # 是否有物理损坏
         "physical_damage": camera_analysis.get('physical_damage', '未知'),
         "flashlight_line": flashlight_analysis.get('functionality', '未知'),
-        "other_info": device_info.get("other_info", '无')
+        "other_info": other_info,
     }
     return result
 

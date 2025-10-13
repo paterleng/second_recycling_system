@@ -376,7 +376,7 @@ class GeminiVLMService:
                 "error": f"文字提取失败: {str(e)}"
             }
 
-    async def extract_device_info(self, image_path: str) -> Dict[str, Any]:
+    async def extract_device_info(self, image_paths: List[str]) -> Dict[str, Any]:
         """
         从手机"关于本机"截图中提取设备信息 (替代OCR功能)
 
@@ -408,8 +408,11 @@ class GeminiVLMService:
             }
             """
 
-            image_data = self._load_image(image_path)
-            response = self.model.generate_content([prompt, image_data])
+            images = []
+            for image_path in image_paths:
+                image_data = self._load_image(image_path)
+                images.append(image_data)
+            response = self.model.generate_content([prompt]+images)
 
             result_text = response.text.strip()
 
@@ -450,7 +453,7 @@ class GeminiVLMService:
                 "error": f"设备信息提取失败: {str(e)}"
             }
 
-    async def machine_type_info(self, image_path: str) -> Dict[str, Any]:
+    async def machine_type_info(self, image_paths: List[str]) -> Dict[str, Any]:
             """
             从手机"关于本机"截图中提取设备信息 (替代OCR功能)
 
@@ -477,9 +480,11 @@ class GeminiVLMService:
                     "other_info": "其他重要信息"
                 }
                 """
-
-                image_data = self._load_image(image_path)
-                response = self.model.generate_content([prompt, image_data])
+                images = []
+                for image_path in image_paths:
+                    image_data = self._load_image(image_path)
+                    images.append(image_data)
+                response = self.model.generate_content([prompt]+images)
 
                 result_text = response.text.strip()
 
