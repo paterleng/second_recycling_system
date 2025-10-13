@@ -145,8 +145,8 @@ def process_inspection_task(self, task_id_str: str):
 
         # 组合到一起返回
         final_report = extract_information(analysis_results)
-        print("价格",re_results.get("result_text",{}).get("price","需要人工定价"))
         # 加上价格存储到数据库中
+        final_report["price"] = re_results.get("result_text",{}).get("price","需要人工定价")
 
         final_report["user_input"] = basic_info
         final_report["user_inputs_text"] = user_inputs_text

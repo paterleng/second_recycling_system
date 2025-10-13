@@ -64,7 +64,7 @@ async def create_inspection(
         #         text_inputs = json.loads(user_text_inputs)
         #     except json.JSONDecodeError:
         #         raise HTTPException(status_code=400, detail="user_text_inputs must be valid JSON")
-        return {"task_id": "成功"}
+        # return {"task_id": "成功"}
         # 创建质检服务实例
         inspection_service = InspectionService(db)
 
