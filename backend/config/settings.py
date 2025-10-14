@@ -14,13 +14,6 @@ class Settings(BaseSettings):
     # Redis配置
     REDIS_URL: str = "redis://localhost:6379/0"
 
-    # 阿里云OSS配置
-    ALIYUN_ACCESS_KEY_ID: str = ""
-    ALIYUN_ACCESS_KEY_SECRET: str = ""
-    ALIYUN_OSS_ENDPOINT: str = ""
-    ALIYUN_OSS_BUCKET: str = ""
-
-    # Google Gemini配置 (替代OCR功能)
     # GOOGLE_API_KEY: str = "AIzaSyCmwOrFUUZB_PSzxghpjJFrX5nhrHL82P0"
     GOOGLE_API_KEY: str = "AIzaSyDTEQmlk0ACW9ho7suZ3MWrpEy0l3ouwaU"
     GEMINI_MODEL: str = "gemini-2.0-flash"

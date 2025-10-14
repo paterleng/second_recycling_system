@@ -50,17 +50,7 @@ def process_inspection_task(self, task_id_str: str):
         # 1. VLM文字识别和信息提取
         current_task.update_state(state='PROGRESS', meta={'step': 'VLM信息提取', 'progress': 20})
 
-
-        # 使用Gemini提取"关于本机"信息
-        # about_machine_path = upload_base / uploaded_files["about_machine_image"]
-        # print(about_machine_path)
-        # device_info_result = asyncio.run(
-        #     gemini_vlm.extract_device_info(str(about_machine_path))
-        # )
-        # print("本机信息结果",device_info_result)
-
         # 使用Gemini提取手机类型信息
-        # machine_type_path = upload_base / uploaded_files["machine_type_image"]
         machine_type_paths = [
             str(upload_base / path) for path in uploaded_files["machine_type_image"]
         ]

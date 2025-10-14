@@ -22,7 +22,6 @@ class InspectionService:
         model: str,
         storage: str,
         accessory_condition: str,
-        # about_machine_image: UploadFile,
         machine_type_image: List[UploadFile],
         product_date_image: UploadFile,
         battery_health_image: UploadFile,
@@ -48,7 +47,6 @@ class InspectionService:
 
         try:
             # 保存文件
-            # about_machine_path = await file_storage.save_file(about_machine_image, task_folder)
             product_date_path = await file_storage.save_file(product_date_image, task_folder)
             battery_health_path = await file_storage.save_file(battery_health_image, task_folder)
             screen_path = await file_storage.save_file(screen_image, task_folder)

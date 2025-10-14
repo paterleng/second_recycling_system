@@ -21,7 +21,6 @@ async def create_inspection(
     model: str = Form(...),
     storage: str = Form(...),
     accessory_condition: str = Form(...),
-    # about_machine_image: UploadFile = File(...),
     machine_type_image: List[UploadFile] = File(...),
     product_date_image: UploadFile = File(...),
     battery_health_image: UploadFile = File(...),
@@ -38,7 +37,6 @@ async def create_inspection(
     model: 设备的型号
     storage: 设备的存储容量
     accessory_condition: 配件的状况（例如：原装, 良好, 缺失等）。
-    # about_machine_image: 整机图片
     machine_type_image: 手机类型
     product_date_image: 生产日期
     battery_health_image: 电池健康截图或相关图片
@@ -56,15 +54,6 @@ async def create_inspection(
     """
 
     try:
-        # 解析用户文本输入
-        # text_inputs = {}
-        # if user_text_inputs:
-        #     # 用户不能输入
-        #     try:
-        #         text_inputs = json.loads(user_text_inputs)
-        #     except json.JSONDecodeError:
-        #         raise HTTPException(status_code=400, detail="user_text_inputs must be valid JSON")
-        # return {"task_id": "成功"}
         # 创建质检服务实例
         inspection_service = InspectionService(db)
 
@@ -74,7 +63,6 @@ async def create_inspection(
             model=model,
             storage=storage,
             accessory_condition=accessory_condition,
-            # about_machine_image=about_machine_image,
             machine_type_image=machine_type_image,
             product_date_image=product_date_image,
             battery_health_image=battery_health_image,
