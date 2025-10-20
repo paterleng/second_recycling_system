@@ -1,0 +1,80 @@
+.arco-modal-header {
+  border-bottom: 1px solid #7b0bfc !important;
+}
+
+.arco-upload-trigger .arco-upload-trigger-drag {
+  background-color: transparent;
+  border-radius: 8px;
+}
+
+.arco-upload-trigger .arco-upload-trigger-drag-active {
+  border-color: #9b5cff;
+}
+
+.arco-upload-trigger-drag .arco-icon-plus {
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.arco-upload-trigger-tip {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.arco-upload-trigger-drag-text {
+  color: rgba(0, 0, 0, 0);
+}
+.arco-upload-trigger-drag:hover .arco-upload-trigger-drag-text {
+  color: rgba(0, 0, 0, 0);
+}
+.arco-upload-trigger-drag:hover .arco-icon-plus {
+  color: #fff;
+}
+
+.arco-upload-list-item {
+  border: 1px solid #999;
+  border-radius: 4px;
+}
+.arco-upload-list-item-text {
+  background-color: transparent;
+  padding-right: 28px;
+}
+
+.arco-upload-list-item-text-name .arco-upload-list-item-text-name-link {
+  color: #999;
+}
+
+.arco-upload-list-item-text-name .arco-icon {
+  stroke: #999;
+}
+
+.arco-upload-list-item-operation {
+  margin-right: 12px;
+}
+
+/* 分析结果折叠面板 */
+.collapse-panel .arco-collapse-item {
+  border-bottom: none;
+}
+.collapse-panel .arco-collapse-item-header,
+.collapse-panel .arco-collapse-item-content {
+  border-bottom: none;
+  background-color: transparent;
+  color: #fff;
+}
+
+.collapse-panel .arco-collapse-item-header-left {
+  padding-left: 0;
+}
+
+.collapse-panel .arco-collapse-item-header-icon {
+  color: #fff;
+}
+
+.collapse-panel .arco-collapse-item .arco-collapse-item-icon-hover {
+  left: 770px;
+}
+
+.arco-icon-hover.arco-collapse-item-icon-hover:hover::before {
+  background-color: transparent;
+}
