@@ -98,13 +98,7 @@ const isAcceptFile = (file: File, accept: string) => {
 };
 
 type DetectionMethod = "photo" | "video" | "";
-type Step =
-  | "method"
-  | "basic-info"
-  | "photo-guide"
-  | "video-guide"
-  | "ai-analysis"
-  | "result";
+type Step = "method" | "basic-info" | "photo-guide" | "ai-analysis" | "result";
 
 interface PhotoStep {
   id: string;
@@ -171,8 +165,8 @@ export function PhoneRecycling() {
   );
   const [userTextInputs, setUserTextInputs] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [uploadedVideo, setUploadedVideo] = useState<File | null>(null);
-  const [videoAnalysisProgress, setVideoAnalysisProgress] = useState<number>(0);
+  // const [uploadedVideo, setUploadedVideo] = useState<File | null>(null);
+  // const [videoAnalysisProgress, setVideoAnalysisProgress] = useState<number>(0);
 
   const [photoSteps, setPhotoSteps] = useState<PhotoStep[]>([]);
 
@@ -586,136 +580,136 @@ export function PhoneRecycling() {
   };
 
   // 视频上传处理
-  const handleVideoUpload = (file: File) => {
-    // 防止重复处理同一个文件
-    if (
-      uploadedVideo &&
-      uploadedVideo.name === file.name &&
-      uploadedVideo.size === file.size
-    ) {
-      return;
-    }
+  // const handleVideoUpload = (file: File) => {
+  //   // 防止重复处理同一个文件
+  //   if (
+  //     uploadedVideo &&
+  //     uploadedVideo.name === file.name &&
+  //     uploadedVideo.size === file.size
+  //   ) {
+  //     return;
+  //   }
 
-    // 检查文件类型
-    if (!file.type.startsWith("video/")) {
-      Message.error(t("upload.invalidVideoType"));
-      return;
-    }
+  //   // 检查文件类型
+  //   if (!file.type.startsWith("video/")) {
+  //     Message.error(t("upload.invalidVideoType"));
+  //     return;
+  //   }
 
-    // 检查文件大小 (限制为100MB)
-    const maxSize = 100 * 1024 * 1024; // 100MB
-    if (file.size > maxSize) {
-      Message.error(t("upload.videoTooLarge"));
-      return;
-    }
+  //   // 检查文件大小 (限制为100MB)
+  //   const maxSize = 100 * 1024 * 1024; // 100MB
+  //   if (file.size > maxSize) {
+  //     Message.error(t("upload.videoTooLarge"));
+  //     return;
+  //   }
 
-    setUploadedVideo(file);
-    Message.success(t("upload.videoSuccess"));
-  };
+  //   setUploadedVideo(file);
+  //   Message.success(t("upload.videoSuccess"));
+  // };
 
   // 视频模拟AI分析
-  const startVideoAnalysis = async () => {
-    if (!uploadedVideo) {
-      Message.error(t("upload.noVideo"));
-      return;
-    }
+  // const startVideoAnalysis = async () => {
+  //   if (!uploadedVideo) {
+  //     Message.error(t("upload.noVideo"));
+  //     return;
+  //   }
 
-    setCurrentStep("ai-analysis");
-    setVideoAnalysisProgress(0);
-    setIsSubmitting(true);
+  //   setCurrentStep("ai-analysis");
+  //   setVideoAnalysisProgress(0);
+  //   setIsSubmitting(true);
 
-    try {
-      // 模拟15秒的AI分析过程
-      const analysisDuration = 20000; // 20秒
-      const updateInterval = 100; // 每100ms更新一次进度
-      const totalUpdates = analysisDuration / updateInterval;
+  //   try {
+  //     // 模拟15秒的AI分析过程
+  //     const analysisDuration = 20000; // 20秒
+  //     const updateInterval = 100; // 每100ms更新一次进度
+  //     const totalUpdates = analysisDuration / updateInterval;
 
-      for (let i = 0; i <= totalUpdates; i++) {
-        const progress = (i / totalUpdates) * 100;
-        setVideoAnalysisProgress(progress);
+  //     for (let i = 0; i <= totalUpdates; i++) {
+  //       const progress = (i / totalUpdates) * 100;
+  //       setVideoAnalysisProgress(progress);
 
-        if (i < totalUpdates) {
-          await new Promise((resolve) => setTimeout(resolve, updateInterval));
-        }
-      }
+  //       if (i < totalUpdates) {
+  //         await new Promise((resolve) => setTimeout(resolve, updateInterval));
+  //       }
+  //     }
 
-      // 模拟检测结果 - 使用固定API返回格式
-      const mockResult = {
-        brand: "XiaomiRedmi K50",
-        storage_total: "48.2GB/256GB",
-        storage_use: "48.2GB/256GB",
-        product_date: "Unknown",
-        first_use_date: "Unknown",
-        maximum_capacity: "Not Available",
-        battery_health: "Normal",
-        charge_cycles: "0",
-        overall_condition: "Poor",
-        appearance_result: [
-          "- **positive analysis:** The front screen has noticeable scratches. These are superficial but definitely present. Unable to assess for cracks without closer inspection, but scratches are visible.",
-          "- **backside analysis:** The back glass is heavily cracked. The cracking is extensive, suggesting a significant impact.  The top right corner of the back panel near the camera module appears to be particularly damaged and may be chipping.",
-          "- **side analysis:** The edges appear to have some wear and tear, possibly scuffs or small dents. More images might reveal more detail, but some edge wear is evident.",
-        ],
-        screen_condition: "Fair",
-        screen_result: [
-          "- **main questions:**",
-          "    - Scratches: Several scratches are visible on the screen.  One is a longer, more prominent scratch that runs from the upper left quadrant diagonally down towards the center-right of the screen. There are other lighter, shorter scratches scattered across the lower half of the screen.",
-          "    - Smudges/Fingerprints: There are noticeable smudges and fingerprints on the screen surface. This makes it difficult to assess the display accurately, but they are present.",
-          "    - Possible Chip/Damage: There is a potential small chip or area of damage on the top-left corner of the phone screen where the black frame meets the screen, it is quite minor, but there.",
-          "    - Display Off: The display is turned off in the image, which limits assessment of display quality issues like dead pixels, color abnormalities, or screen burn-in.",
-          "    - Dust: There might be some visible dust on the top screen area",
-          "- **display quality:** Cannot be fully assessed due to the screen being off. However, scratches and smudges are present.",
-        ],
-        camera_lens: "Poor",
-        physical_damage:
-          "Likely undamaged lenses, phone surrounding lenses is damaged.",
-        flashlight_line: "Fully Functional",
-        other_info:
-          "Running HyperOS, Processor: Dimensity 8100, RAM: 8GB + 4GB",
-        price: "100-300",
-        user_input: {
-          brand: "redmi",
-          model: "k50",
-          storage: "256gb",
-          accessory_condition: "complete",
-        },
-        user_inputs_text: "无备注",
-      };
+  //     // 模拟检测结果 - 使用固定API返回格式
+  //     const mockResult = {
+  //       brand: "XiaomiRedmi K50",
+  //       storage_total: "48.2GB/256GB",
+  //       storage_use: "48.2GB/256GB",
+  //       product_date: "Unknown",
+  //       first_use_date: "Unknown",
+  //       maximum_capacity: "Not Available",
+  //       battery_health: "Normal",
+  //       charge_cycles: "0",
+  //       overall_condition: "Poor",
+  //       appearance_result: [
+  //         "- **positive analysis:** The front screen has noticeable scratches. These are superficial but definitely present. Unable to assess for cracks without closer inspection, but scratches are visible.",
+  //         "- **backside analysis:** The back glass is heavily cracked. The cracking is extensive, suggesting a significant impact.  The top right corner of the back panel near the camera module appears to be particularly damaged and may be chipping.",
+  //         "- **side analysis:** The edges appear to have some wear and tear, possibly scuffs or small dents. More images might reveal more detail, but some edge wear is evident.",
+  //       ],
+  //       screen_condition: "Fair",
+  //       screen_result: [
+  //         "- **main questions:**",
+  //         "    - Scratches: Several scratches are visible on the screen.  One is a longer, more prominent scratch that runs from the upper left quadrant diagonally down towards the center-right of the screen. There are other lighter, shorter scratches scattered across the lower half of the screen.",
+  //         "    - Smudges/Fingerprints: There are noticeable smudges and fingerprints on the screen surface. This makes it difficult to assess the display accurately, but they are present.",
+  //         "    - Possible Chip/Damage: There is a potential small chip or area of damage on the top-left corner of the phone screen where the black frame meets the screen, it is quite minor, but there.",
+  //         "    - Display Off: The display is turned off in the image, which limits assessment of display quality issues like dead pixels, color abnormalities, or screen burn-in.",
+  //         "    - Dust: There might be some visible dust on the top screen area",
+  //         "- **display quality:** Cannot be fully assessed due to the screen being off. However, scratches and smudges are present.",
+  //       ],
+  //       camera_lens: "Poor",
+  //       physical_damage:
+  //         "Likely undamaged lenses, phone surrounding lenses is damaged.",
+  //       flashlight_line: "Fully Functional",
+  //       other_info:
+  //         "Running HyperOS, Processor: Dimensity 8100, RAM: 8GB + 4GB",
+  //       price: "100-300",
+  //       user_input: {
+  //         brand: "redmi",
+  //         model: "k50",
+  //         storage: "256gb",
+  //         accessory_condition: "complete",
+  //       },
+  //       user_inputs_text: "无备注",
+  //     };
 
-      setAiAnalysisResult(mockResult);
-      // 价格为字符串直接正常返回
-      setEstimatedPrice(mockResult.price);
-      setIsSubmitting(false);
-      setCurrentStep("result");
-      Message.success(t("detection.completed"));
+  //     setAiAnalysisResult(mockResult);
+  //     // 价格为字符串直接正常返回
+  //     setEstimatedPrice(mockResult.price);
+  //     setIsSubmitting(false);
+  //     setCurrentStep("result");
+  //     Message.success(t("detection.completed"));
 
-      // 滚动到结果位置
-      setTimeout(() => {
-        const resultCard = document.querySelector(
-          '[data-testid="result-card"]'
-        );
-        if (resultCard) {
-          const cardRect = resultCard.getBoundingClientRect();
-          const windowHeight = window.innerHeight;
-          const cardHeight = cardRect.height;
-          const currentScrollTop =
-            window.pageYOffset || document.documentElement.scrollTop;
-          const cardCenterFromTop =
-            currentScrollTop + cardRect.top + cardHeight / 2;
-          const targetScrollTop = cardCenterFromTop - windowHeight / 2;
+  //     // 滚动到结果位置
+  //     setTimeout(() => {
+  //       const resultCard = document.querySelector(
+  //         '[data-testid="result-card"]'
+  //       );
+  //       if (resultCard) {
+  //         const cardRect = resultCard.getBoundingClientRect();
+  //         const windowHeight = window.innerHeight;
+  //         const cardHeight = cardRect.height;
+  //         const currentScrollTop =
+  //           window.pageYOffset || document.documentElement.scrollTop;
+  //         const cardCenterFromTop =
+  //           currentScrollTop + cardRect.top + cardHeight / 2;
+  //         const targetScrollTop = cardCenterFromTop - windowHeight / 2;
 
-          window.scrollTo({
-            top: targetScrollTop,
-            behavior: "smooth",
-          });
-        }
-      }, 200);
-    } catch (error) {
-      console.error("视频分析失败:", error);
-      Message.error(t("detection.failed"));
-      setIsSubmitting(false);
-      setCurrentStep("video-guide");
-    }
-  };
+  //         window.scrollTo({
+  //           top: targetScrollTop,
+  //           behavior: "smooth",
+  //         });
+  //       }
+  //     }, 200);
+  //   } catch (error) {
+  //     console.error("视频分析失败:", error);
+  //     Message.error(t("detection.failed"));
+  //     setIsSubmitting(false);
+  //     setCurrentStep("video-guide");
+  //   }
+  // };
 
   return (
     <div
@@ -739,7 +733,13 @@ export function PhoneRecycling() {
       {/* 导航栏 */}
       <nav className="relative z-10 border-b border-border/50 bg-black/20 backdrop-blur-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
+          <div
+            className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => {
+              setCurrentStep("method");
+              setDetectionMethod("");
+            }}
+          >
             <img src={logo} alt="SPR" className=" w-12 h-12" />
             <span className="text-xl font-semibold text-foreground">SPR</span>
           </div>
@@ -846,7 +846,6 @@ export function PhoneRecycling() {
                 {currentStep === "method" && t("steps.method")}
                 {currentStep === "basic-info" && t("steps.basicInfo")}
                 {currentStep === "photo-guide" && t("steps.photoGuide")}
-                {currentStep === "video-guide" && t("steps.videoGuide")}
                 {currentStep === "ai-analysis" && t("steps.analysis")}
                 {currentStep === "result" && t("steps.result")}
               </span>
@@ -855,7 +854,6 @@ export function PhoneRecycling() {
               {currentStep === "method" && t("steps.method.desc")}
               {currentStep === "basic-info" && t("steps.basicInfo.desc")}
               {currentStep === "photo-guide" && t("steps.photoGuide.desc")}
-              {currentStep === "video-guide" && t("steps.videoGuide.desc")}
               {currentStep === "ai-analysis" && t("steps.analysis.desc")}
               {currentStep === "result" && t("steps.result.desc")}
             </CardDescription>
@@ -921,7 +919,7 @@ export function PhoneRecycling() {
                         ? "border-violet-400 bg-violet-500/10 shadow-lg shadow-violet-500/20"
                         : "border-white/20 hover:border-violet-400/60 hover:bg-violet-500/5"
                     }`}
-                    onClick={() => setDetectionMethod("video")}
+                    onClick={() => setVisible(true)}
                   >
                     <CardContent className="p-8 text-center">
                       <div className="relative mb-4">
@@ -957,7 +955,6 @@ export function PhoneRecycling() {
                     </CardContent>
                   </Card>
                 </div>
-                {/* 注释掉原有的开发中弹框
                 <Modal
                   title={
                     <span style={{ color: "#e0e2ff" }}>
@@ -991,7 +988,6 @@ export function PhoneRecycling() {
                     </Button>
                   </div>
                 </Modal>
-                */}
                 {detectionMethod && (
                   <Button
                     onClick={() => setCurrentStep("basic-info")}
@@ -1102,13 +1098,7 @@ export function PhoneRecycling() {
                       <ArrowLeft className="mr-2 h-4 w-4" /> {t("btn.prev")}
                     </Button>
                     <Button
-                      onClick={() =>
-                        setCurrentStep(
-                          detectionMethod === "photo"
-                            ? "photo-guide"
-                            : "video-guide"
-                        )
-                      }
+                      onClick={() => setCurrentStep("photo-guide")}
                       className="flex-1 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white shadow-lg shadow-purple-500/30 cursor-pointer"
                     >
                       {t("btn.startDetection")}{" "}
@@ -1329,8 +1319,8 @@ export function PhoneRecycling() {
               </div>
             )}
 
-            {/* 步骤4：视频检测指南 */}
-            {currentStep === "video-guide" && (
+            {/* 步骤4：视频检测指南 - 已注释 */}
+            {/* {currentStep === "video-guide" && (
               <div className="space-y-6">
                 <Card className="bg-transparent border-white/10">
                   <CardContent className="p-6">
@@ -1402,7 +1392,6 @@ export function PhoneRecycling() {
                   </CardContent>
                 </Card>
 
-                {/* 视频上传区域 */}
                 <Card className="bg-transparent border-white/10">
                   <CardContent className="p-6">
                     <div className="text-center mb-4">
@@ -1489,7 +1478,7 @@ export function PhoneRecycling() {
                   </Button>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* 步骤5：AI分析 */}
             {currentStep === "ai-analysis" && (
@@ -1499,61 +1488,28 @@ export function PhoneRecycling() {
                     <Zap className="h-16 w-16 text-violet-400 animate-pulse" />
                   </div>
                   <h3 className="text-xl font-semibold text-white">
-                    {detectionMethod === "video"
-                      ? t("analysis.videoTitle")
-                      : t("analysis.title")}
+                    {t("analysis.title")}
                   </h3>
                   <p className="text-gray-300">
-                    {detectionMethod === "video" ? (
-                      <>
-                        {videoAnalysisProgress < 30 &&
-                          t("analysis.videoProcessing")}
-                        {videoAnalysisProgress >= 30 &&
-                          videoAnalysisProgress < 60 &&
-                          t("analysis.videoAnalysis")}
-                        {videoAnalysisProgress >= 60 &&
-                          videoAnalysisProgress < 90 &&
-                          t("analysis.videoDetection")}
-                        {videoAnalysisProgress >= 90 &&
-                          t("analysis.videoReport")}
-                      </>
-                    ) : (
-                      <>
-                        {analysisProgress < 30 && t("analysis.appearance")}
-                        {analysisProgress >= 30 &&
-                          analysisProgress < 60 &&
-                          t("analysis.screen")}
-                        {analysisProgress >= 60 &&
-                          analysisProgress < 90 &&
-                          t("analysis.hardware")}
-                        {analysisProgress >= 90 && t("analysis.report")}
-                      </>
-                    )}
+                    {analysisProgress < 30 && t("analysis.appearance")}
+                    {analysisProgress >= 30 &&
+                      analysisProgress < 60 &&
+                      t("analysis.screen")}
+                    {analysisProgress >= 60 &&
+                      analysisProgress < 90 &&
+                      t("analysis.hardware")}
+                    {analysisProgress >= 90 && t("analysis.report")}
                   </p>
                 </div>
 
                 <div className="max-w-md mx-auto">
-                  <Progress
-                    value={
-                      detectionMethod === "video"
-                        ? videoAnalysisProgress
-                        : analysisProgress
-                    }
-                    className="h-3"
-                  />
+                  <Progress value={analysisProgress} className="h-3" />
                   <p className="text-sm text-gray-400 mt-2">
-                    {Math.round(
-                      detectionMethod === "video"
-                        ? videoAnalysisProgress
-                        : analysisProgress
-                    )}
-                    %
+                    {Math.round(analysisProgress)}%
                   </p>
                 </div>
 
-                {(detectionMethod === "video"
-                  ? videoAnalysisProgress >= 100
-                  : analysisComplete) && (
+                {analysisComplete && (
                   <div className="space-y-4">
                     <CheckCircle className="h-16 w-16 text-violet-400 mx-auto" />
                     <p className="text-violet-400 font-semibold">
@@ -1874,7 +1830,13 @@ export function PhoneRecycling() {
         <div className="container mx-auto px-4 py-8">
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
+              <div
+                className="flex items-center space-x-2 mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => {
+                  setCurrentStep("method");
+                  setDetectionMethod("");
+                }}
+              >
                 <img src={logo} alt="SPR" className="h-8 w-8" />
                 <span className="font-semibold text-white">SPR</span>
               </div>
